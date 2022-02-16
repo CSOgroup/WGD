@@ -50,6 +50,13 @@ optional arguments:
   --name2 NAME2  Name of second sample
 ```
 
+This command will create a folder with four plots inside:
+* Observed/Expected inter-chromosomal contacts for sample1
+* Observed/Expected inter-chromosomal contacts for sample2
+* Contact fold-change between sample1 and sample2 (sample2  / sample1)
+* Boxplot comparing the fold-change distributions between long and short chromosome pairs
+
+
 
 ## Calder compartment calls
 All the Hi-C sub-compartment calls in this study made with Calder are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/compartment_domains`.
