@@ -7,6 +7,7 @@ Analysis code for the paper
 > by Ruxandra A. Lambuta, Luca Nanni, Yuanlong Liu, Juan Diaz-Miyar, Arvind Iyer, Daniele Tavernari, Natalya Katanayeva, Giovanni Ciriello and Elisa Oricchio
 
 
+
 ## Hi-C processing
 
 ### Converting `.hic` to `.cool`
@@ -124,6 +125,48 @@ This command will create a folder with six plots inside:
 * Observed/Expected inter-compartments contacts for sample2 focusing on inter-chromosomal interactions
 * Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on intra-chromosomal interactions
 * Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on inter-chromosomal interactions
+
+
+## Hi-C Insulation scores and insulation boundaries
+All the Hi-C insulation scores for each sample of this study are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/insulation_scores`.
+
+Hi-C boundaries derived from insulation scores are available in the subfolder `hic_features/insulation_boundaries`.
+
+## Comparing Hi-C insulation between Control and WGD
+Given the insulation scores and the boundairies of two samples, we can compare their levels across two conditions as follows:
+```
+python insulation/compare_insulation.py \
+                    sample1_insulation.bw \
+                    sample1_boundaries.bed \
+                    sample2_insulation.bw \
+                    sample2_boundaries.bed \
+                    insulation_output \
+                    --name1 sample1 \
+                    --name2 sample2
+```
+
+Meaning of the arguments:
+```
+usage: compare_insulation.py [-h] [--name1 NAME1] [--name2 NAME2]
+                             sample1_insulation sample1_boundaries sample2_insulation sample2_boundaries output_path
+
+Compares the insulation between two samples
+
+positional arguments:
+  sample1_insulation  Path to the first sample insulation (control)
+  sample1_boundaries  Path to the first sample boundaries (control)
+  sample2_insulation  Path to the second sample (treatment)
+  sample2_boundaries  Path to the second sample boundaries (treatment)
+  output_path         Where to store the results
+
+optional arguments:
+  -h, --help          show this help message and exit
+  --name1 NAME1       Name of first sample
+  --name2 NAME2       Name of second sample
+```
+
+This command will output one plot:
+* Scatterplot where for each shared boundary between the two conditions the insulation values are shown
 
 
 ## Detecting Compartment Repositioning Events (CoREs)
