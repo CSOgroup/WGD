@@ -57,9 +57,74 @@ This command will create a folder with four plots inside:
 * Boxplot comparing the fold-change distributions between long and short chromosome pairs
 
 
-
 ## Calder compartment calls
 All the Hi-C sub-compartment calls in this study made with Calder are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/compartment_domains`.
+
+
+## Interactions between sub-compartments at WGD
+
+Given a Hi-C experiment `input.mcool` and its relative Calder sub-compartments `input_calder.bed`, we can then aggregate the contacts for each pair of Calder sub-compartments levels, for each chromosome and chromosome pair as follows:
+
+```
+python intercompartments/aggregate_interactions_by_compartment.py \
+        input.mcool \
+        50000 \
+        input_calder.bed \
+        input_interactions_by_compartment.tsv
+```
+
+Meaning of the arguments:
+```
+usage: aggregate_interactions_by_compartment.py [-h] cool_path resolution compartments_path output_path
+
+Coarse Hi-C data by bin categories
+
+positional arguments:
+  cool_path          Path to the cool file
+  resolution         Resolution to use for the Hi-C file
+  compartments_path  Path to the bin category file
+  output_path        Output path where to store the category aggregated result
+
+optional arguments:
+  -h, --help         show this help message and exit
+```
+
+Once aggregated the interactions at the compartment level, we can compare two samples `sample1_interactions_by_compartment.tsv` and `sample2_interactions_by_compartment.tsv` as follows:
+
+```
+python intercompartments/compare_intercompartments_contacts.py \
+        sample1_interactions_by_compartment.tsv \
+        sample2_interactions_by_compartment.tsv \
+        intercompartments_output \
+        --name1 sample1 \
+        --name2 sample2
+```
+
+Meaning of the arguments:
+```
+usage: compare_intercompartments_contacts.py [-h] [--name1 NAME1] [--name2 NAME2] sample1 sample2 output_path
+
+Coarse Hi-C data by bin categories
+
+positional arguments:
+  sample1        Path to compartments contacts for the first sample (control)
+  sample2        Path to compartments contacts for the first sample (treatment)
+  output_path    Where to store the results
+
+optional arguments:
+  -h, --help     show this help message and exit
+  --name1 NAME1  Name of first sample
+  --name2 NAME2  Name of second sample
+```
+
+This command will create a folder with six plots inside:
+* Observed/Expected inter-compartments contacts for sample1 focusing on intra-chromosomal interactions
+* Observed/Expected inter-compartments contacts for sample1 focusing on inter-chromosomal interactions
+* Observed/Expected inter-compartments contacts for sample2 focusing on intra-chromosomal interactions
+* Observed/Expected inter-compartments contacts for sample2 focusing on inter-chromosomal interactions
+* Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on intra-chromosomal interactions
+* Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on inter-chromosomal interactions
+
 
 ## Detecting Compartment Repositioning Events (CoREs)
 Compartment repositioning events are detected directly from a pair of Calder compartment call files (.bed).
