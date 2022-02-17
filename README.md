@@ -7,7 +7,17 @@ Analysis code for the paper
 > by Ruxandra A. Lambuta, Luca Nanni, Yuanlong Liu, Juan Diaz-Miyar, Arvind Iyer, Daniele Tavernari, Natalya Katanayeva, Giovanni Ciriello and Elisa Oricchio
 
 
+## Table of Contents
+* [Hi-C processing](#hic)
+* [Interactions between chromosomes at WGD](#interchromosomal)
+* [Calder calls](#calder)
+* [Interactions between sub-compartments at WGD](#intercompartments)
+* [Insulation scores and insulation boundaries](#insulation)
+* [Comparing Hi-C insulation between Control and WGD](#compare_insulation)
+* [Detecting Compartment Repositioning Events (CoREs)](#cores)
 
+
+<a name="hic"></a>
 ## Hi-C processing
 
 ### Converting `.hic` to `.cool`
@@ -17,6 +27,7 @@ Most of the Hi-C analyses done in the paper use the `.cool` format. To convert t
 bash hic_processing/convert_hic_to_cool.sh input.hic output.mcool
 ```
 
+<a name="interchromosomal"></a>
 ## Interactions between chromosomes at WGD
 Given a Hi-C experiment in `.cool` format, we can dump interactions at the chromosome level using the following script:
 ```
@@ -58,10 +69,12 @@ This command will create a folder with four plots inside:
 * Boxplot comparing the fold-change distributions between long and short chromosome pairs
 
 
+<a name="calder"></a>
 ## Calder compartment calls
 All the Hi-C sub-compartment calls in this study made with Calder are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/compartment_domains`.
 
 
+<a name="intercompartments"></a>
 ## Interactions between sub-compartments at WGD
 
 Given a Hi-C experiment `input.mcool` and its relative Calder sub-compartments `input_calder.bed`, we can then aggregate the contacts for each pair of Calder sub-compartments levels, for each chromosome and chromosome pair as follows:
@@ -127,11 +140,13 @@ This command will create a folder with six plots inside:
 * Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on inter-chromosomal interactions
 
 
+<a name="insulation"></a>
 ## Hi-C Insulation scores and insulation boundaries
 All the Hi-C insulation scores for each sample of this study are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/insulation_scores`.
 
 Hi-C boundaries derived from insulation scores are available in the subfolder `hic_features/insulation_boundaries`.
 
+<a name="compare_insulation"></a>
 ## Comparing Hi-C insulation between Control and WGD
 Given the insulation scores and the boundairies of two samples, we can compare their levels across two conditions as follows:
 ```
@@ -168,7 +183,7 @@ optional arguments:
 This command will output one plot:
 * Scatterplot where for each shared boundary between the two conditions the insulation values are shown
 
-
+<a name="cores"></a>
 ## Detecting Compartment Repositioning Events (CoREs)
 Compartment repositioning events are detected directly from a pair of Calder compartment call files (.bed).
 
