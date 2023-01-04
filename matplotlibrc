@@ -1,0 +1,27 @@
+ps.fonttype:				42
+pdf.fonttype:				42
+savefig.transparent:		True
+savefig.bbox:				tight
+font.family:				sans-serif
+font.sans-serif:			Arial
+
+axes.linewidth:				1.0
+grid.linewidth: 			0.8
+lines.linewidth: 			1.2
+lines.markersize:			4.8
+patch.linewidth:			0.8
+xtick.major.width:			1.0
+ytick.major.width:			1.0
+xtick.minor.width:			0.8
+ytick.minor.width:			0.8
+xtick.major.size:			4.8
+ytick.major.size:			4.8
+xtick.minor.size:			3.2
+ytick.minor.size:			3.2
+font.size:					14
+axes.labelsize:				14
+axes.titlesize:				14
+xtick.labelsize:			13
+ytick.labelsize:			13
+legend.fontsize:			13
+legend.title_fontsize:		14

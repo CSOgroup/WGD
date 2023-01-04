@@ -1,220 +1,44 @@
-# WGD
+# Whole genome doubling drives oncogenic loss of chromatin segregation
 
-Analysis code for the paper 
-
-> *Whole genome doubling promotes tumorigenesis through loss of chromatin segregation and compartment repositioning* 
-> 
-> by Ruxandra A. Lambuta, Luca Nanni, Yuanlong Liu, Juan Diaz-Miyar, Arvind Iyer, Daniele Tavernari, Natalya Katanayeva, Giovanni Ciriello and Elisa Oricchio
+Ruxandra A. Lambuta, Luca Nanni, Yuanlong Liu, Juan Diaz-Miyar, Arvind Iyer, Daniele Tavernari, Natalya Katanayeva, Giovanni Ciriello and Elisa Oricchio
 
 
-## Table of Contents
-* [Hi-C processing](#hic)
-* [Interactions between chromosomes at WGD](#interchromosomal)
-* [Calder calls](#calder)
-* [Interactions between sub-compartments at WGD](#intercompartments)
-* [Insulation scores and insulation boundaries](#insulation)
-* [Comparing Hi-C insulation between Control and WGD](#compare_insulation)
-* [Detecting Compartment Repositioning Events (CoREs)](#cores)
-
-
-<a name="hic"></a>
-## Hi-C processing
-
-### Converting `.hic` to `.cool`
-Most of the Hi-C analyses done in the paper use the `.cool` format. To convert the `.hic` files stored on Zenodo ([link1](https://zenodo.org/record/6053792), [link2](https://zenodo.org/record/6054423)), you can use the following script:
-
+# Running the analysis
+You can run the whole set of analyses by simply running 
 ```
-bash hic_processing/convert_hic_to_cool.sh input.hic output.mcool
+bash run.sh
 ```
 
-<a name="interchromosomal"></a>
-## Interactions between chromosomes at WGD
-Given a Hi-C experiment in `.cool` format, we can dump interactions at the chromosome level using the following script:
-```
-python interchromosomal/dump_cool.py --resolution 1000000000 --genome hg19 input.cool interchromosomal_dump.txt
-```
-The script will store the inter-chromosomal interactions in a text file and also perform IC balancing of the contacts.
+The script will:
+1. Download the data necessary for the analysis from Zenodo
+2. Run each analysis present in the [`src`](./src) folder 
+3. Store the resulting figures in the [`figures`](./figures) folder
 
-Given two interchromosomal contact files `sample1_dump.txt` and `sample2_dump.txt`, we can now compare them using:
-```
-python interchromosomal/compare_interchromosomal_contacts.py \
-                               sample1_dump.txt \
-                               sample2_dump.txt \
-                               interchromosomal_output \
-                               --name1 sample1 \
-                               --name2 sample2
-```
+You can check the rest of this document to learn about each step of the pipeline.
 
-Explanation of the parameters:
-```
-usage: compare_interchromosomal_contacts.py [-h] [--name1 NAME1] [--name2 NAME2] sample1 sample2 output_path
+## [00_download.sh](src/00_download.sh)
+Downloads the data necessary for the analysis from the two Zenodo repositories:
+- Part 1: https://doi.org/10.5281/zenodo.7351767
+- Part 2: https://doi.org/10.5281/zenodo.7351776
 
-Compares the inter-chromosomal contacts between two Hi-C experiments
+It then merges the files in a single `zip` file, and finally decompress the archive into the `data` folder
 
-positional arguments:
-  sample1        Path to the first sample (control)
-  sample2        Path to the second sample (treatment)
-  output_path    Where to store the results
+## [01_hic_to_mcool.sh](src/01_hic_to_mcool.sh)
+Converts the `*.hic` files storing information about Hi-C experiments into `*.mcool` files for later processing.
 
-optional arguments:
-  -h, --help     show this help message and exit
-  --name1 NAME1  Name of first sample
-  --name2 NAME2  Name of second sample
-```
+## [02_LCS.py](src/02_LCS.py)
+It performs, for each sample comparison presented in the paper, the analyis of Loss of Chromatin Segregation (LCS).
+The analysis is done a three different levels:
+- Inter-chromosomal interactions
+- Inter-compartmental interactions
+- Boundary insulation
 
-This command will create a folder with four plots inside:
-* Observed/Expected inter-chromosomal contacts for sample1
-* Observed/Expected inter-chromosomal contacts for sample2
-* Contact fold-change between sample1 and sample2 (sample2  / sample1)
-* Boxplot comparing the fold-change distributions between long and short chromosome pairs
+## [03_ChIPSeq.py](src/03_ChIPSeq.py)
+It performs the analysis of ChIPSeq signals and peaks for CTCF and H3K9me3 between Control and WGD samples, as presented in the paper. 
 
-
-<a name="calder"></a>
-## Calder compartment calls
-All the Hi-C sub-compartment calls in this study made with Calder are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/compartment_domains`.
-
-
-<a name="intercompartments"></a>
-## Interactions between sub-compartments at WGD
-
-Given a Hi-C experiment `input.mcool` and its relative Calder sub-compartments `input_calder.bed`, we can then aggregate the contacts for each pair of Calder sub-compartments levels, for each chromosome and chromosome pair as follows:
-
-```
-python intercompartments/aggregate_interactions_by_compartment.py \
-        input.mcool \
-        50000 \
-        input_calder.bed \
-        input_interactions_by_compartment.tsv
-```
-
-Meaning of the arguments:
-```
-usage: aggregate_interactions_by_compartment.py [-h] cool_path resolution compartments_path output_path
-
-Coarse Hi-C data by bin categories
-
-positional arguments:
-  cool_path          Path to the cool file
-  resolution         Resolution to use for the Hi-C file
-  compartments_path  Path to the bin category file
-  output_path        Output path where to store the category aggregated result
-
-optional arguments:
-  -h, --help         show this help message and exit
-```
-
-Once aggregated the interactions at the compartment level, we can compare two samples `sample1_interactions_by_compartment.tsv` and `sample2_interactions_by_compartment.tsv` as follows:
-
-```
-python intercompartments/compare_intercompartments_contacts.py \
-        sample1_interactions_by_compartment.tsv \
-        sample2_interactions_by_compartment.tsv \
-        intercompartments_output \
-        --name1 sample1 \
-        --name2 sample2
-```
-
-Meaning of the arguments:
-```
-usage: compare_intercompartments_contacts.py [-h] [--name1 NAME1] [--name2 NAME2] sample1 sample2 output_path
-
-Coarse Hi-C data by bin categories
-
-positional arguments:
-  sample1        Path to compartments contacts for the first sample (control)
-  sample2        Path to compartments contacts for the first sample (treatment)
-  output_path    Where to store the results
-
-optional arguments:
-  -h, --help     show this help message and exit
-  --name1 NAME1  Name of first sample
-  --name2 NAME2  Name of second sample
-```
-
-This command will create a folder with six plots inside:
-* Observed/Expected inter-compartments contacts for sample1 focusing on intra-chromosomal interactions
-* Observed/Expected inter-compartments contacts for sample1 focusing on inter-chromosomal interactions
-* Observed/Expected inter-compartments contacts for sample2 focusing on intra-chromosomal interactions
-* Observed/Expected inter-compartments contacts for sample2 focusing on inter-chromosomal interactions
-* Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on intra-chromosomal interactions
-* Inter-compartments contact fold-change between sample1 and sample2 (sample2  / sample1) focusing on inter-chromosomal interactions
-
-
-<a name="insulation"></a>
-## Hi-C Insulation scores and insulation boundaries
-All the Hi-C insulation scores for each sample of this study are deposited at [this Zenodo link](https://zenodo.org/record/6054423). BED files used in the analysis are in the subfolder `hic_features/insulation_scores`.
-
-Hi-C boundaries derived from insulation scores are available in the subfolder `hic_features/insulation_boundaries`.
-
-<a name="compare_insulation"></a>
-## Comparing Hi-C insulation between Control and WGD
-Given the insulation scores and the boundairies of two samples, we can compare their levels across two conditions as follows:
-```
-python insulation/compare_insulation.py \
-                    sample1_insulation.bw \
-                    sample1_boundaries.bed \
-                    sample2_insulation.bw \
-                    sample2_boundaries.bed \
-                    insulation_output \
-                    --name1 sample1 \
-                    --name2 sample2
-```
-
-Meaning of the arguments:
-```
-usage: compare_insulation.py [-h] [--name1 NAME1] [--name2 NAME2]
-                             sample1_insulation sample1_boundaries sample2_insulation sample2_boundaries output_path
-
-Compares the insulation between two samples
-
-positional arguments:
-  sample1_insulation  Path to the first sample insulation (control)
-  sample1_boundaries  Path to the first sample boundaries (control)
-  sample2_insulation  Path to the second sample (treatment)
-  sample2_boundaries  Path to the second sample boundaries (treatment)
-  output_path         Where to store the results
-
-optional arguments:
-  -h, --help          show this help message and exit
-  --name1 NAME1       Name of first sample
-  --name2 NAME2       Name of second sample
-```
-
-This command will output one plot:
-* Scatterplot where for each shared boundary between the two conditions the insulation values are shown
-
-<a name="cores"></a>
-## Detecting Compartment Repositioning Events (CoREs)
-Compartment repositioning events are detected directly from a pair of Calder compartment call files (.bed).
-
-```
-python CoREs/find_CoREs.py sample1_calder.bed \
-			   sample2_calder.bed \
-			   50000 \
-			   sample1_sample2_CoREs.tsv \
-			   --min_std 0.1 \
-			   --control1_path control1_calder.bed \
-			   --control2_path control2_calder.bed
-```
-
-Meaning of the arguments:
-
-```
-find_CoREs.py [-h] [--min_std MIN_STD] [--control1_path [CONTROL1_PATH ...]] [--control2_path [CONTROL2_PATH ...]] sample1_path sample2_path binsize output_path
-
-Identifying Compartment Repositioning Events from Calder genomic segmentations
-
-positional arguments:
-  sample1_path          Path to the Calder segmentation of sample 1
-  sample2_path          Path to the Calder segmentation of sample 2
-  binsize               Resolution to use in the analysis
-  output_path           Path where to store the identified regions
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --min_std MIN_STD     Maximum standard deviation allowed for segmented regions
-  --control1_path [CONTROL1_PATH ...]
-                        Path(s) to the Calder segmentation(s) to use to use as control 1
-  --control2_path [CONTROL2_PATH ...]
-                        Path(s) to the Calder segmentation(s) to use to use as control 2
-```
+## [04_scHiC.py](04_scHiC.py)
+Analysis of Single-cell Hi-C data, as presented in the paper. Specifically, the code will:
+1. Analyse inter-chromosomal interactions in single cells
+2. Perform pseudo-bulk inter-chromosomal analysis from single cells
+3. Analyse compartment segregation at single cell level
+4. Infer copy number changes for each single cell
